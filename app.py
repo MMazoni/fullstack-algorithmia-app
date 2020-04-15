@@ -103,4 +103,103 @@ def generate_jwt(user):
         'exp': datetime.now() + timedelta(minutes=30)},
         app.config['SECRET_KEY'])
 
-    
+def token_required(f):
+    @wraps(f)
+    def _verify(*args, **kwargs):
+        auth_headers = request.headers.get('Authorization', '').split()
+        try:
+            if len(auth_headers) != 2:
+                raise jwt.InvalidTokenError()
+            token = auth_headers[1]
+            data = jwt.decode(token, app.config['SECRET_KEY'])
+            user = user_loader(data['id'])
+            if not user:
+                return jsonify({
+                    'message': 'Invalid credentials',
+                    'authenticated': False}), 401
+            return f(user, *args, **kwargs)
+        except (jwt.ExpiredSignatureError, jwt.InvalidTokenError):
+            return jsonify({
+                'message': 'Invalid or expired token',
+                'authenticated': False}), 401
+        return _verify
+
+# routes for webapp
+@app.route('/', methods=['GET'])
+def home():
+    return send_file('static/index.html')
+
+
+@app.route('/register', methods=['POST'])
+def register():
+    data = request.get_json()
+    if user_loader(data['email']):
+        return jsonify({
+            'message': 'A user with that email already exists',
+            'authenticated': False}), 409
+    user = User(data['email'], data['password'])
+    users.insert_one(user.__dict__)
+    token = generate_jwt(user)
+    return jsonify({
+        'token': token.decode('UTF-8'),
+        'user': user.to_dict()}), 201
+
+
+@app.route('/login', methods=['POST'])
+def login():
+    data = request.get_json()
+    user = user_loader(data['email'], data['password'])
+    if not user:
+        return jsonify({
+            'message': 'Invalid credentials',
+            'authenticated': False}), 401
+    token = generate_jwt(user)
+    return jsonify({
+        'token': token.decode('UTF-8'),
+        'user': user.to_dict()})
+
+
+@app.route('/account', methods=['GET'])
+@token_required
+def get_account(user):
+    token = generate_jwt(user)
+    return jsonify({
+        'token': token.decode('UTF-8'),
+        'user': user.to_dict()})
+
+
+@app.route('/account', methods=['POST'])
+@token_required
+def post_account(user):
+    data = request.get_json()
+    user.name = data.get('name', user.name)
+    user.bio = data.get('bio', user.bio)
+    users.replace_one({'id': user.id}, user.__dict__)
+    return jsonify({'user': user.to_dict()}), 201
+
+
+@app.route('/avatar', methods=['POST'])
+@token_required
+def post_avatar(user):
+    avatar = request.files['avatar']
+    file_ext = path.splitext(avatar.filename)[1]
+    with NamedTemporaryFile(suffix=file_ext) as f:
+        with Image.open(avatar) as img:
+            try:
+                cover = resizeimage.resize_cover(img, [400, 400])
+                cover.save(f, img.format)
+            except:
+                img.save(f)
+            remote_file = upload_file_algorithmia(f.name, user.id+file_ext)
+        if is_nude(remote_file):
+            return jsonify({'message': 'That image may contain nudity'}), 422
+        cropped_remote_file = auto_crop(remote_file, 200, 200)
+        cropped_file = client.file(cropped_remote_file).getFile()
+        user.avatar = (f'/avatars{user.id}{file_ext}').lower()
+        copyfile(cropped_file.name, 'static/'+user.avatar)
+        users.replace_one({'id': user.id}, user.__dict__)
+        return jsonify({'user': user.to_dict()}), 201
+
+# to start server: "python3 ./app.py"
+if __name__ == '__main__':
+    app.run()

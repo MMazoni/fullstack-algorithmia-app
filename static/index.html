@@ -4,23 +4,64 @@
 
 <div class="container text-center">
 
-    <h2 class="text-center text-secondary p-3">Welcome to EmptyApp</h2>
-
+    <h2 class="text-center text-secondary p-3">Welcome to EmptyApp!</h2>
+    
     <!-- profile pane for logged-in users -->
-
-    <div class="row justify-content-md-center border border-info p-2">
-    
-    <div class="col-4">
+    <div v-if="user" class="row justify-content-md-center border border-info p-2" style="min-width: 700px">
+      
+      <div class="col-4">
         <div class="mt-1">
-            <img src="/default_avatar.png" alt="default_avatar" style="min-width: 700px" class="img-fluid">
+            <img v-if="avatar_loading" class="img-fluid" src="/loading.gif" alt="avatar" style="max-width: 200px">
+            <img v-if class="img-fluid" :src="user.avatar+'?'+update_time" alt="avatar" style="max-width: 200px">
         </div>
-    
-        <form action="account" method="POST" enctype="multipart/form-data">
-            <input type="file" id="avatar" ref="avatar" accept="image/gif, image/jpg, image/jpeg, image/png"/>
+        <form action="account" method="POST" enctype="multipart/form-data" @submit.prevent>
+          <input type="file" id="avatar" ref="avatar" accept="image/gif, image/jpg, image/jpeg, image/png" @change="updateAvatar" />
         </form>
+        <button class="btn btn-outline-dark mt-1" @click="triggerAvatar" :disabled="avatar_loading">Change image</button>
+      </div>
+      
+      <div class="col-8">
+        <div class="row mt-3">
+          <div class="col-12 text-center text-danger" style="min-height: 1.5rem">{{ error }}</div>
+        </div>
+        <div class="row mt-3">
+          <h5 class="col-2 text-right">Email:</h5><p class="pl-1">{{ user.id }}</p>
+        </div>
+        <div class="row mt-3">
+          <h5 class="col-2 text-right">Name:</h5><input class="col-9" name="bio" v-model="user.name" />
+        </div>
+        <div class="row mt-3">
+          <h5 class="col-2 text-right">Bio:</h5><input class="col-9" name="bio" v-model="user.bio" />
+        </div>
+        <div class="row mt-4">
+          <div class="col-6 text-right"><div class="btn btn-outline-dark" @click="updateUser" >Save</div></div>
+          <div class="col-6 text-left"><div class="btn btn-outline-dark" @click="logOut">Log Out</div></div>
+        </div>
+      </div>
+      
     </div>
-    
-    
+  
+    <!-- login/register pane -->
+    <div v-else class="row justify-content-md-center border border-info p-2" style="min-width: 700px">
+      
+      <div class="col-12">
+        <div class="row mt-3">
+          <div class="col-12 text-center text-danger" style="min-height: 1.5rem">{{ error }}</div>
+        </div>
+        <div class="row mt-3">
+          <h5 class="col-2 text-right">Email:</h5><input class="col-9" name="email" autocomplete="username" v-model="login.email" />
+        </div>
+        <div class="row mt-3">
+          <h5 class="col-2 text-right">Password:</h5><input type="password" class="col-9" name="password" autocomplete="current-password" />
+        </div>
+        <div class="row mt-4">
+          <div class="col-6 text-right"><div class="btn btn-outline-dark" @click="login">Log In</div></div>
+          <div class="col-6 text-left"><div class="btn btn-outline-dark" @click="register">Register</div></div>
+        </div>
+      </div>
+      
     </div>
+  
+  </div>
 
-</div>
+  <script src="/app.js"></script>

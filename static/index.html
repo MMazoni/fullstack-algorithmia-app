@@ -1,0 +1,26 @@
+<script src="https://cdn.jsdelivr.net/npm/vue@2.6.10/dist/vue.js"></script>
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+
+<div class="container text-center">
+
+    <h2 class="text-center text-secondary p-3">Welcome to EmptyApp</h2>
+
+    <!-- profile pane for logged-in users -->
+
+    <div class="row justify-content-md-center border border-info p-2">
+    
+    <div class="col-4">
+        <div class="mt-1">
+            <img src="/default_avatar.png" alt="default_avatar" style="min-width: 700px" class="img-fluid">
+        </div>
+    
+        <form action="account" method="POST" enctype="multipart/form-data">
+            <input type="file" id="avatar" ref="avatar" accept="image/gif, image/jpg, image/jpeg, image/png"/>
+        </form>
+    </div>
+    
+    
+    </div>
+
+</div>

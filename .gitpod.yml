@@ -10,4 +10,4 @@ ports:
 tasks:
   - init: pip3 install -r requirements.txt # runs during prebuild
   - init: mkdir -p /wokspace/mongodb
-  - init: mongod --dbpath /mongodb --logpath /mongodb/mongodb.log
+  - init: mongod --dbpath /wokspace/mongodb --logpath /workspace/mongodb/mongodb.log

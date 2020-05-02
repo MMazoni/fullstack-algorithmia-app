@@ -9,5 +9,4 @@ ports:
 # List the start up tasks. You can start them in parallel in multiple terminals. See https://www.gitpod.io/docs/config-start-tasks/
 tasks:
   - init: pip3 install -r requirements.txt # runs during prebuild
-  - init: mkdir -p /wokspace/mongodb
-  - init: mongod --dbpath /wokspace/mongodb --logpath /workspace/mongodb/mongodb.log
+  - init: mkdir -p /workspace/data && mongod --dbpath /workspace/data --logpath /workspace/data/mongodb.log
